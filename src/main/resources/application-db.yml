@@ -1,0 +1,8 @@
+# Todo : change MySQL
+# 개발용 h2 설정 (MySQL)
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:tcp://localhost/~/triple;MODE=MYSQL
+    username: sa
+    password:
