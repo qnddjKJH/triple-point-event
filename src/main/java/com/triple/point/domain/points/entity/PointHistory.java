@@ -83,8 +83,8 @@ public class PointHistory extends BaseTimeEntity {
             bonusPoint();
         }
 
-        increasePoint = currentPoint * -1;
-        this.currentPoint += increasePoint;
+        this.increasePoint = currentPoint * -1;
+        this.currentPoint = currentPoint + increasePoint;
     }
 
     private void initPoint(PointHistoryRequest request) {

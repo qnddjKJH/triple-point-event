@@ -44,19 +44,19 @@ public class PointHistoryService {
     @Transactional
     public PointHistoryResponse pointsServiceManager(PointHistoryRequest request) {
         log.info(">>> Request data : {}", request);
-        String action = request.getAction();
 
-        if(action.equals("ADD")){
-            log.info("start ADD event method : addEvent() ");
-            return addEvent(request);
-        } else if (action.equals("MOD")) {
-            log.info("start MOD event method : modifyEvent() ");
-            return modifyEvent(request);
-        } else if (action.equals("DELETE")) {
-            log.info("start DELETE event method : deleteEvent() ");
-            return deleteEvent(request);
-        } else {
-            throw new RuntimeException("요청이 잘 못 되었습니다.");
+        switch (request.getAction()) {
+            case "ADD":
+                log.info("start ADD event method : addEvent() ");
+                return addEvent(request);
+            case "MOD":
+                log.info("start MOD event method : modifyEvent() ");
+                return modifyEvent(request);
+            case "DELETE":
+                log.info("start DELETE event method : deleteEvent() ");
+                return deleteEvent(request);
+            default:
+                throw new RuntimeException("요청이 잘 못 되었습니다.");
         }
     }
 
@@ -141,6 +141,7 @@ public class PointHistoryService {
         PointHistory pointHistory = request.toEntity();
         pointHistory.deletePoint(targetHistory.getCurrentPoint(), targetHistory.isFirstReview());
 
+        pointHistoryRepository.save(pointHistory);
         return new PointHistoryResponse(pointHistory);
     }
 }
