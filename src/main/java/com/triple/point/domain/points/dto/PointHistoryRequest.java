@@ -1,6 +1,6 @@
 package com.triple.point.domain.points.dto;
 
-import com.triple.point.domain.points.entity.EventType;
+import com.triple.point.domain.points.entity.PointHistory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PointsRequest {
+public class PointHistoryRequest {
     private String type;
     private String action;
     private String reviewId;
@@ -18,6 +18,10 @@ public class PointsRequest {
     private List<String> attachedPhotoIds;
     private String userId;
     private String placeId;
+
+    public PointHistory toEntity() {
+        return PointHistory.createPointHistory(this);
+    }
 
     public boolean isContentLengthBonus() {
         return content.length() > 0;
