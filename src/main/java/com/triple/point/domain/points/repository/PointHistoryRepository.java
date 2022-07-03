@@ -14,5 +14,5 @@ public interface PointHistoryRepository extends JpaRepository<PointHistory, UUID
     Optional<PointHistory> findTopByUserIdAndReviewIdOrderByCreatedAtDesc(String userId, String reviewId);
     List<PointHistory> findByUserId(String userId); // 유저별 내역
     List<PointHistory> findByPlaceId(String placeId); // 장소별
-    List<PointHistory> findByReviewId(String userId); // 리뷰별
+    List<PointHistory> findByReviewId(String reviewId); // 리뷰별
 }
