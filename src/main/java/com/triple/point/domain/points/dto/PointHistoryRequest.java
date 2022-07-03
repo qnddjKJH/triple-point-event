@@ -1,5 +1,6 @@
 package com.triple.point.domain.points.dto;
 
+import com.triple.point.domain.common.dto.EventRequest;
 import com.triple.point.domain.points.entity.PointHistory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +11,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PointHistoryRequest {
+public class PointHistoryRequest implements EventRequest<PointHistory> {
     private String type;
     private String action;
     private String reviewId;
