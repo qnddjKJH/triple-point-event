@@ -46,7 +46,7 @@ public class PointsController {
      * 사용자 포인트 총점 조회 API
      *
      * */
-    @GetMapping("/{userId}/total-point")
+    @GetMapping("/{userId}/total")
     public ResponseEntity<TotalPointResponse> userTotalPoint(@PathVariable("userId") String userId) {
         int userTotalPoint = pointHistoryService.userTotalPoint(userId);
         TotalPointResponse response = TotalPointResponse.builder()
