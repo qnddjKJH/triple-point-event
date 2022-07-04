@@ -1,5 +1,7 @@
 package com.triple.point.domain.points.service;
 
+import com.triple.point.domain.common.dto.EventRequest;
+import com.triple.point.domain.common.dto.EventResponse;
 import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.dto.PointHistoryResponse;
 import com.triple.point.domain.points.entity.ActionType;
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
-public class PointHistoryService {
+public class PointHistoryService implements EventService {
 
     private final PointHistoryRepository pointHistoryRepository;
 
@@ -42,19 +44,19 @@ public class PointHistoryService {
     * 포인트 이력은 남아야 한다. *삭제 금지*
     */
     @Transactional
-    public PointHistoryResponse pointsServiceManager(PointHistoryRequest request) {
+    public PointHistoryResponse pointsServiceManager(EventRequest request) {
         log.info(">>> Request data : {}", request);
 
-        switch (request.getAction()) {
+        switch (request.getAction().name()) {
             case "ADD":
                 log.info("start ADD event method : addEvent() ");
-                return addEvent(request);
+                return (PointHistoryResponse) addEvent(request);
             case "MOD":
                 log.info("start MOD event method : modifyEvent() ");
-                return modifyEvent(request);
+                return (PointHistoryResponse) modifyEvent(request);
             case "DELETE":
                 log.info("start DELETE event method : deleteEvent() ");
-                return deleteEvent(request);
+                return (PointHistoryResponse) deleteEvent(request);
             default:
                 throw new RuntimeException("요청이 잘 못 되었습니다.");
         }
@@ -88,7 +90,9 @@ public class PointHistoryService {
     * 비고
     *  - 사용자는 장소당 하나의 리뷰만 작성 가능
     */
-    private PointHistoryResponse addEvent(PointHistoryRequest request) {
+    @Override
+    public EventResponse addEvent(EventRequest eventRequest) {
+        PointHistoryRequest request = (PointHistoryRequest) eventRequest;
         // 특정 장소의 첫 리뷰 판단
         boolean checkFirstReview = pointHistoryRepository.findByPlaceId(request.getPlaceId()).isEmpty();
 
@@ -98,7 +102,7 @@ public class PointHistoryService {
                 .findByUserIdAndPlaceIdAndAction(
                         request.getUserId(),
                         request.getPlaceId(),
-                        ActionType.valueOf(request.getAction()))
+                        request.getAction())
                 .orElseGet(request::toEntity);
 
         // 요청 유저의 장소 리뷰가 없으면 신규 포인트 내역 생성 및 초기화
@@ -116,7 +120,10 @@ public class PointHistoryService {
         return new PointHistoryResponse(pointHistory);
     }
 
-    private PointHistoryResponse modifyEvent(PointHistoryRequest request) {
+    @Override
+    public EventResponse modifyEvent(EventRequest eventRequest) {
+        PointHistoryRequest request = (PointHistoryRequest) eventRequest;
+
         // 수정 대상 = 사용자가 쓴 리뷰
         PointHistory recentHistory = pointHistoryRepository
                 .findTopByUserIdAndReviewIdOrderByCreatedAtDesc(request.getUserId(), request.getReviewId())
@@ -133,7 +140,10 @@ public class PointHistoryService {
         return new PointHistoryResponse(modifyHistory);
     }
 
-    private PointHistoryResponse deleteEvent(PointHistoryRequest request) {
+    @Override
+    public EventResponse deleteEvent(EventRequest eventRequest) {
+        PointHistoryRequest request = (PointHistoryRequest) eventRequest;
+
         // 최근 이력이 없음 == 삭제할 리뷰가 없음으로 판단 = 에러
         PointHistory targetHistory = pointHistoryRepository.findTopByUserIdAndReviewIdOrderByCreatedAtDesc(request.getUserId(), request.getReviewId())
                 .orElseThrow(() -> new RuntimeException("Not Found"));

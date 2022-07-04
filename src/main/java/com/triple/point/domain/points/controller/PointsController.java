@@ -4,6 +4,7 @@ import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.dto.PointHistoryResponse;
 import com.triple.point.domain.points.dto.TotalPointResponse;
 import com.triple.point.domain.points.service.PointHistoryService;
+import com.triple.point.proxy.EventServiceProxy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @Slf4j
@@ -19,6 +21,7 @@ import java.util.List;
 @RestController
 public class PointsController {
 
+    private final EventServiceProxy eventServiceProxy;
     private final PointHistoryService pointHistoryService;
 
     @GetMapping("")
@@ -58,13 +61,15 @@ public class PointsController {
 
 
     @PostMapping("")
-    public ResponseEntity<PointHistoryResponse> savePointHistory(@RequestBody PointHistoryRequest request) {
+    public ResponseEntity<PointHistoryResponse> savePointHistory(@RequestBody PointHistoryRequest request) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
         log.info("[POST] :: /posts, request :: {}", request);
-        PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
+        //PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
+        PointHistoryResponse invoke = (PointHistoryResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
+        log.info("[PROXY] :: response {}", invoke.toString());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(pointHistoryResponse);
+                .body(invoke);
     }
 }

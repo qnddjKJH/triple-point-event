@@ -1,9 +1,12 @@
 package com.triple.point.domain.points.service;
 
-public interface EventService<E> {
-    E addEvent();
+import com.triple.point.domain.common.dto.EventRequest;
+import com.triple.point.domain.common.dto.EventResponse;
 
-    E modifyEvent();
+public interface EventService {
+    EventResponse addEvent(EventRequest request);
 
-    E deleteEvent();
+    EventResponse modifyEvent(EventRequest request);
+
+    EventResponse deleteEvent(EventRequest request);
 }
