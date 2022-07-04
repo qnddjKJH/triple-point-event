@@ -53,8 +53,8 @@ public class PointHistory extends BaseTimeEntity {
     public static PointHistory createPointHistory(PointHistoryRequest request) {
         PointHistory history = PointHistory.builder()
                 .userId(request.getUserId())
-                .type(EventType.valueOf(request.getType()))
-                .action(ActionType.valueOf(request.getAction()))
+                .type(request.getType())
+                .action(request.getAction())
                 .placeId(request.getPlaceId())
                 .reviewId(request.getReviewId())
                 .build();

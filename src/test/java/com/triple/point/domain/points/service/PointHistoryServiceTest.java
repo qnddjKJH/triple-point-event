@@ -51,7 +51,7 @@ class PointHistoryServiceTest {
         when(pointHistoryRepository.findByPlaceId(any()))
                 .thenReturn(new ArrayList<>());
         when(pointHistoryRepository.findByUserIdAndPlaceIdAndAction(
-                request.getUserId(), request.getPlaceId(), ActionType.valueOf(request.getAction())
+                request.getUserId(), request.getPlaceId(), request.getAction()
                 )).thenReturn(Optional.of(pointHistory));
         when(pointHistoryRepository.save(pointHistory))
                 .thenReturn(pointHistory);
@@ -73,7 +73,7 @@ class PointHistoryServiceTest {
         when(pointHistoryRepository.findByPlaceId(any()))
                 .thenReturn(List.of(pointHistory)); // 비어있지 않으므로 첫 리뷰로 판단하지 않음
         when(pointHistoryRepository.findByUserIdAndPlaceIdAndAction(
-                request.getUserId(), request.getPlaceId(), ActionType.valueOf(request.getAction())
+                request.getUserId(), request.getPlaceId(), request.getAction()
         )).thenReturn(Optional.of(pointHistory));
         when(pointHistoryRepository.save(pointHistory))
                 .thenReturn(pointHistory);

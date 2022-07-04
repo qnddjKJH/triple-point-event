@@ -1,5 +1,6 @@
 package com.triple.point.domain.points.dto;
 
+import com.triple.point.domain.common.dto.EventResponse;
 import com.triple.point.domain.points.entity.ActionType;
 import com.triple.point.domain.points.entity.EventType;
 import com.triple.point.domain.points.entity.PointHistory;
@@ -8,7 +9,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class PointHistoryResponse {
+public class PointHistoryResponse implements EventResponse {
 
     private UUID pointHistoryId;
     private EventType type;
