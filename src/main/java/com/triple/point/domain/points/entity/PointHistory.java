@@ -1,6 +1,8 @@
 package com.triple.point.domain.points.entity;
 
 import com.triple.point.domain.common.BaseTimeEntity;
+import com.triple.point.domain.common.type.ActionType;
+import com.triple.point.domain.common.type.EventType;
 import com.triple.point.domain.points.dto.PointHistoryRequest;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -62,6 +64,20 @@ public class PointHistory extends BaseTimeEntity {
         history.initPoint(request);
         return history;
     }
+    /*
+    * Points 기능
+    * 사용자 별 총점 조회 *필수
+    * 포인트 내역 조회 *필수
+    * 포인트 추가 *필수
+    *  - 특정 장소에서의 첫 리뷰 1점 ==> 장소Id 조회 내역 없으면 1점
+    *  - 리뷰글 1자 이상 1점
+    *  - 사진 1개 이상 1점
+    * 포인트 수정  *필수
+    *  - 변경 리뷰글자수 0자 -1점
+    *  - 변경 사진수 1개 -1점
+    * 포인트 삭제 *필수
+    *  - 모든 포인트 회수
+    */
 
     public void calculationPoint() {
         increasePoint = increasePoint - currentPoint;
