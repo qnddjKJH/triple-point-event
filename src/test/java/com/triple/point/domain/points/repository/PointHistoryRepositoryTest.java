@@ -1,17 +1,22 @@
 package com.triple.point.domain.points.repository;
 
+import com.triple.point.config.AuditingConfig;
+import com.triple.point.domain.common.type.ActionType;
+import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.entity.PointHistory;
 import com.triple.point.testDto.TestRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static com.triple.point.testDto.TestRequest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Import(AuditingConfig.class)
 @DataJpaTest
 class PointHistoryRepositoryTest {
     @Autowired
@@ -83,15 +88,72 @@ class PointHistoryRepositoryTest {
         pointHistoryRepository.save(pointHistory1);
         pointHistoryRepository.save(pointHistory2);
 
-        System.out.println("testRequest1.toString() = " + testRequest1.toString());
-
         // when
         List<PointHistory> reviews = pointHistoryRepository.findByReviewId(testRequest1.getUuidMap().get(REVIEW));
-        System.out.println("reviews.get(0).toString() = " + reviews.get(0).toString());
 
         // then
         assertThat(reviews.size()).isEqualTo(1);
         assertThat(reviews.get(0).getReviewId()).isEqualTo(testRequest1.getUuidMap().get(REVIEW));
+    }
+
+    @DisplayName("사용자가 장소에 리뷰 등록(ADD) 내역 조회")
+    @Test
+    public void findByUserIdAndPlaceIdAndActionTest() throws Exception {
+        // given
+        TestRequest testRequest1 = new TestRequest();
+        PointHistoryRequest request1 = testRequest1.getRequest();
+
+        TestRequest testRequest2 = new TestRequest();
+        PointHistoryRequest request2 = testRequest2.getRequest();
+
+
+        pointHistoryRepository.save(request1.toEntity());
+        pointHistoryRepository.save(request2.toEntity());
+
+        // when
+        PointHistory pointHistory = pointHistoryRepository
+                .findByUserIdAndPlaceIdAndAction(request1.getUserId(), request1.getPlaceId(), request1.getAction())
+                .orElse(null);
+
+
+        // then
+        assertThat(pointHistory).isNotNull();
+        assertThat(pointHistory.getUserId()).isEqualTo(request1.getUserId());
+        assertThat(pointHistory.getAction()).isEqualTo(request1.getAction());
+        assertThat(pointHistory.getUserId()).isNotEqualTo(request2.getUserId());
+    }
+    
+    @DisplayName("리뷰 최근 내역 1건 조회")
+    @Test
+    public void findTopReviewIdOrderByCreatedAtDescTest() throws Exception {
+        // given
+        TestRequest testRequest1 = new TestRequest();
+        PointHistoryRequest request1 = testRequest1.getRequest();
+        TestRequest testRequest2 = new TestRequest();
+        PointHistoryRequest request2 = testRequest2.getRequest();
+
+        request2.setAction(ActionType.MOD.name());
+        request2.setContent("");
+        request2.setUserId(request1.getUserId());
+        request2.setPlaceId(request1.getPlaceId());
+        request2.setReviewId(request1.getReviewId());
+
+
+        PointHistory save1 = pointHistoryRepository.save(request1.toEntity());
+        Thread.sleep(1000);
+        PointHistory save2 = pointHistoryRepository.save(request2.toEntity());
+
+        // when
+        PointHistory pointHistory = pointHistoryRepository
+                .findTopByReviewIdOrderByCreatedAtDesc(request1.getReviewId())
+                .orElse(null);
+
+        // then
+        assertThat(pointHistory).isNotNull();
+        assertThat(pointHistory.getId()).isEqualTo(save2.getId());
+        assertThat(pointHistory.getId()).isNotEqualTo(save1.getId());
+        assertThat(pointHistory.getUserId()).isEqualTo(request2.getUserId());
+        assertThat(pointHistory.getAction()).isEqualTo(request2.getAction());
     }
 
 }
