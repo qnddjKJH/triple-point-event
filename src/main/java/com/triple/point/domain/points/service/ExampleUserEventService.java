@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class TestUserEventService implements EventService {
+public class ExampleUserEventService implements EventService {
 
 
     @Override

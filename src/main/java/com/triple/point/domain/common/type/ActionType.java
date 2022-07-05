@@ -1,4 +1,4 @@
-package com.triple.point.domain.points.entity;
+package com.triple.point.domain.common.type;
 
 public enum ActionType {
     ADD,
