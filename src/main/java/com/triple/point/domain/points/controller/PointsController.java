@@ -1,5 +1,6 @@
 package com.triple.point.domain.points.controller;
 
+import com.triple.point.domain.common.dto.EventResponseEntity;
 import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.dto.PointHistoryResponse;
 import com.triple.point.domain.points.dto.TotalPointResponse;
@@ -8,8 +9,6 @@ import com.triple.point.proxy.EventServiceProxy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.InvocationTargetException;
@@ -25,21 +24,23 @@ public class PointsController {
     private final PointHistoryService pointHistoryService;
 
     @GetMapping("")
-    public ResponseEntity<List<PointHistoryResponse>> allHistory() {
+    public EventResponseEntity allHistory() {
         List<PointHistoryResponse> allPointHistories = pointHistoryService.getAllPointHistories();
-        return ResponseEntity
+        return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(allPointHistories);
+                .message("ALL-HISTORY")
+                .data(allPointHistories)
+                .build();
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<PointHistoryResponse>> getUserHistories(@PathVariable("userId") String userId) {
+    public EventResponseEntity getUserHistories(@PathVariable("userId") String userId) {
         List<PointHistoryResponse> userPointHistories = pointHistoryService.getUserPointHistories(userId);
-        return ResponseEntity
+        return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(userPointHistories);
+                .message("USER-HISTORY")
+                .data(userPointHistories)
+                .build();
     }
 
     /**
@@ -47,30 +48,32 @@ public class PointsController {
      *
      * */
     @GetMapping("/{userId}/total")
-    public ResponseEntity<TotalPointResponse> userTotalPoint(@PathVariable("userId") String userId) {
+    public EventResponseEntity userTotalPoint(@PathVariable("userId") String userId) {
         int userTotalPoint = pointHistoryService.userTotalPoint(userId);
         TotalPointResponse response = TotalPointResponse.builder()
                 .userId(userId)
                 .totalPoint(userTotalPoint)
                 .build();
-        return ResponseEntity
+        return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(response);
+                .message("TOTAL")
+                .data(response)
+                .build();
     }
 
 
     @PostMapping("")
-    public ResponseEntity<PointHistoryResponse> points(@RequestBody PointHistoryRequest request)
+    public EventResponseEntity points(@RequestBody PointHistoryRequest request)
             throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
         log.info("[POST] :: /posts, request :: {}", request);
         //PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
-        PointHistoryResponse invoke = (PointHistoryResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
-        log.info("[PROXY] :: response {}", invoke.toString());
+        PointHistoryResponse response = (PointHistoryResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
+        log.info("[POST] :: /posts, response {}", response.toString());
 
-        return ResponseEntity
+        return EventResponseEntity.successResponse()
+                .message(response.getAction().name())
                 .status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(invoke);
+                .data(response)
+                .build();
     }
 }
