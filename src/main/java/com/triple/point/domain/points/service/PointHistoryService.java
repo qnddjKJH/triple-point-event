@@ -2,7 +2,9 @@ package com.triple.point.domain.points.service;
 
 import com.triple.point.domain.common.dto.EventRequest;
 import com.triple.point.domain.common.dto.EventResponse;
+import com.triple.point.domain.common.exception.CustomException;
 import com.triple.point.domain.common.type.ActionType;
+import com.triple.point.domain.common.type.ExceptionType;
 import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.dto.PointHistoryResponse;
 import com.triple.point.domain.points.entity.PointHistory;
@@ -76,9 +78,11 @@ public class PointHistoryService implements EventService {
             // 지급되는 포인트 및 현 시점 포인트 계산
             pointHistory.calculationPoint();
             pointHistoryRepository.save(pointHistory);
+        } else {
+            throw new CustomException(ExceptionType.ALREADY_EXIST_RESOURCE, new PointHistoryResponse(pointHistory));
+
         }
 
-        // Todo : 응답에 포인트를 이미 받은 내역이 있다면 BAD_REQUEST
         return new PointHistoryResponse(pointHistory);
     }
 
@@ -92,9 +96,8 @@ public class PointHistoryService implements EventService {
                 .findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
                 .orElseThrow(() -> new RuntimeException("Not Found History"));
 
-        // Todo : BAD_REQUEST 삭제 되었는데 수정을 하고 있음
         if (recentHistory.getAction() == ActionType.DELETE) {
-            throw new RuntimeException("BAD_REQUEST");
+            throw new CustomException(ExceptionType.BAD_REQUEST_ACTION);
         }
         PointHistory modifyHistory = request.toEntity();
         modifyHistory.modifyPoint(recentHistory.isFirstReview(), request, recentHistory.getCurrentPoint());
@@ -110,7 +113,7 @@ public class PointHistoryService implements EventService {
 
         // 최근 이력이 없음 == 삭제할 리뷰가 없음으로 판단 = 에러
         PointHistory targetHistory = pointHistoryRepository.findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
-                .orElseThrow(() -> new RuntimeException("Not Found"));
+                .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_REVIEW));
 
         PointHistory pointHistory = request.toEntity();
         pointHistory.deletePoint(targetHistory.getCurrentPoint(), targetHistory.isFirstReview());
