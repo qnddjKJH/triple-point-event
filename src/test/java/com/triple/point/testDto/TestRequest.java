@@ -1,7 +1,7 @@
 package com.triple.point.testDto;
 
 import com.triple.point.domain.points.dto.PointHistoryRequest;
-import com.triple.point.domain.points.entity.ActionType;
+import com.triple.point.domain.common.type.ActionType;
 
 import java.util.*;
 

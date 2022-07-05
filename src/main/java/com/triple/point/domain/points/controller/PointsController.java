@@ -61,7 +61,8 @@ public class PointsController {
 
 
     @PostMapping("")
-    public ResponseEntity<PointHistoryResponse> savePointHistory(@RequestBody PointHistoryRequest request) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
+    public ResponseEntity<PointHistoryResponse> points(@RequestBody PointHistoryRequest request)
+            throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
         log.info("[POST] :: /posts, request :: {}", request);
         //PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
         PointHistoryResponse invoke = (PointHistoryResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
