@@ -2,9 +2,9 @@ package com.triple.point.domain.points.service;
 
 import com.triple.point.domain.common.dto.EventRequest;
 import com.triple.point.domain.common.dto.EventResponse;
+import com.triple.point.domain.common.type.ActionType;
 import com.triple.point.domain.points.dto.PointHistoryRequest;
 import com.triple.point.domain.points.dto.PointHistoryResponse;
-import com.triple.point.domain.points.entity.ActionType;
 import com.triple.point.domain.points.entity.PointHistory;
 import com.triple.point.domain.points.repository.PointHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,45 +22,6 @@ import java.util.stream.Collectors;
 public class PointHistoryService implements EventService {
 
     private final PointHistoryRepository pointHistoryRepository;
-
-    /*
-    * Points 기능
-    * 사용자 별 총점 조회 *필수
-    * 포인트 내역 조회 *필수
-    * 포인트 추가 (action == ADD) *필수
-    *  - 특정 장소에서의 첫 리뷰 1점 ==> 장소Id 조회 내역 없으면 1점
-    *  - 리뷰글 1자 이상 1점 ==> content.length > 0 이면 1점
-    *  - 사진 1개 이상 1점 ==> attachedPhotoIds.size > 0 이면 1점
-    * 포인트 수정 (action == MOD) *필수
-    *  - 변경 리뷰글자수 0자 -1점 ==> content.length == 0 이면 -1 or content.length > 0 이면 1점
-    *  - 변경 사진수 1개 -1점 ==> attachedPhotoIds.size == 0 이고 기존 > 0 이면 -1 or attachedPhotoIds.size > 0 1점
-    * 포인트 삭제 (action == DELETE) *필수
-    *  - 모든 포인트 회수
-    * 사용자별 포인트 내역
-    *
-    * 사용자는 장소마다 1개의 리뷰를 작성가능 *확인
-    *
-    *
-    * 포인트 이력은 남아야 한다. *삭제 금지*
-    */
-    @Transactional
-    public PointHistoryResponse pointsServiceManager(EventRequest request) {
-        log.info(">>> Request data : {}", request);
-
-        switch (request.getAction().name()) {
-            case "ADD":
-                log.info("start ADD event method : addEvent() ");
-                return (PointHistoryResponse) addEvent(request);
-            case "MOD":
-                log.info("start MOD event method : modifyEvent() ");
-                return (PointHistoryResponse) modifyEvent(request);
-            case "DELETE":
-                log.info("start DELETE event method : deleteEvent() ");
-                return (PointHistoryResponse) deleteEvent(request);
-            default:
-                throw new RuntimeException("요청이 잘 못 되었습니다.");
-        }
-    }
 
     public List<PointHistoryResponse> getAllPointHistories() {
         return pointHistoryRepository.findAll().stream()
@@ -91,6 +52,7 @@ public class PointHistoryService implements EventService {
     *  - 사용자는 장소당 하나의 리뷰만 작성 가능
     */
     @Override
+    @Transactional
     public EventResponse addEvent(EventRequest eventRequest) {
         PointHistoryRequest request = (PointHistoryRequest) eventRequest;
         // 특정 장소의 첫 리뷰 판단
@@ -121,18 +83,19 @@ public class PointHistoryService implements EventService {
     }
 
     @Override
+    @Transactional
     public EventResponse modifyEvent(EventRequest eventRequest) {
         PointHistoryRequest request = (PointHistoryRequest) eventRequest;
 
         // 수정 대상 = 사용자가 쓴 리뷰
         PointHistory recentHistory = pointHistoryRepository
-                .findTopByUserIdAndReviewIdOrderByCreatedAtDesc(request.getUserId(), request.getReviewId())
+                .findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
                 .orElseThrow(() -> new RuntimeException("Not Found History"));
 
         // Todo : BAD_REQUEST 삭제 되었는데 수정을 하고 있음
-//        if (pointHistory.getAction() == ActionType.DELETE) {
-//            
-//        }
+        if (recentHistory.getAction() == ActionType.DELETE) {
+            throw new RuntimeException("BAD_REQUEST");
+        }
         PointHistory modifyHistory = request.toEntity();
         modifyHistory.modifyPoint(recentHistory.isFirstReview(), request, recentHistory.getCurrentPoint());
 
@@ -141,11 +104,12 @@ public class PointHistoryService implements EventService {
     }
 
     @Override
+    @Transactional
     public EventResponse deleteEvent(EventRequest eventRequest) {
         PointHistoryRequest request = (PointHistoryRequest) eventRequest;
 
         // 최근 이력이 없음 == 삭제할 리뷰가 없음으로 판단 = 에러
-        PointHistory targetHistory = pointHistoryRepository.findTopByUserIdAndReviewIdOrderByCreatedAtDesc(request.getUserId(), request.getReviewId())
+        PointHistory targetHistory = pointHistoryRepository.findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
                 .orElseThrow(() -> new RuntimeException("Not Found"));
 
         PointHistory pointHistory = request.toEntity();

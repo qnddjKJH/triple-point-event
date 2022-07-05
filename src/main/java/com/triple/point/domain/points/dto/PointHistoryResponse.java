@@ -1,11 +1,12 @@
 package com.triple.point.domain.points.dto;
 
 import com.triple.point.domain.common.dto.EventResponse;
-import com.triple.point.domain.points.entity.ActionType;
-import com.triple.point.domain.points.entity.EventType;
+import com.triple.point.domain.common.type.ActionType;
+import com.triple.point.domain.common.type.EventType;
 import com.triple.point.domain.points.entity.PointHistory;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -20,6 +21,7 @@ public class PointHistoryResponse implements EventResponse {
     private String userId;
     private String placeId;
     private String reviewId;
+    private LocalDateTime createdAt;
 
     public PointHistoryResponse(PointHistory history) {
         this.pointHistoryId = history.getId();
@@ -31,5 +33,6 @@ public class PointHistoryResponse implements EventResponse {
         this.userId = history.getUserId();
         this.placeId = history.getPlaceId();
         this.reviewId = history.getReviewId();
+        this.createdAt = history.getCreatedAt();
     }
 }
