@@ -1,7 +1,7 @@
 package com.triple.point.domain.events.controller;
 
-import com.triple.point.domain.events.dto.EventReviewPointRequest;
-import com.triple.point.domain.events.dto.EventReviewPointResponse;
+import com.triple.point.domain.events.dto.PointRequest;
+import com.triple.point.domain.events.dto.PointResponse;
 import com.triple.point.domain.events.service.EventsReviewPointService;
 import com.triple.point.proxy.EventServiceProxy;
 import com.triple.point.testDto.TestRequest;
@@ -37,18 +37,18 @@ class EventsControllerTest {
     public void get_all_test() throws Exception {
         // given
         final TestRequest testRequest = new TestRequest();
-        EventReviewPointRequest request = testRequest.getRequest();
+        PointRequest request = testRequest.getRequest();
         Map<String, String> uuidMap = testRequest.getUuidMap();
 
         final TestRequest testRequest2 = new TestRequest();
-        EventReviewPointRequest request2 = testRequest2.getRequest();
+        PointRequest request2 = testRequest2.getRequest();
         Map<String, String> uuidMap2 = testRequest2.getUuidMap();
 
         // when
         when(eventsReviewPointService.getAllPointHistories())
                 .thenReturn(List.of(
-                        new EventReviewPointResponse(request.toEntity()),
-                        new EventReviewPointResponse(request2.toEntity())
+                        new PointResponse(request.toHistory()),
+                        new PointResponse(request2.toHistory())
                 ));
 
 

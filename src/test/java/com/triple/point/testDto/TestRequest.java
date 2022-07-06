@@ -1,6 +1,6 @@
 package com.triple.point.testDto;
 
-import com.triple.point.domain.events.dto.EventReviewPointRequest;
+import com.triple.point.domain.events.dto.PointRequest;
 import com.triple.point.domain.common.type.ActionType;
 
 import java.util.*;
@@ -11,7 +11,7 @@ public class TestRequest {
     public final static String REVIEW = "reviewId";
     private Map<String, String> uuidMap;
 
-    private EventReviewPointRequest request;
+    private PointRequest request;
 
     public TestRequest() {
         setUuidMap();
@@ -19,7 +19,7 @@ public class TestRequest {
     }
 
     private void setRequest() {
-        request = new EventReviewPointRequest(
+        request = new PointRequest(
                 "REVIEW", randomAction(), uuidMap.get(REVIEW), randomContent(),
                 randomPhoto(), uuidMap.get(USER), uuidMap.get(PLACE)
         );
@@ -27,7 +27,7 @@ public class TestRequest {
 
     private List<String> randomPhoto() {
         List<String> list = new ArrayList<>();
-        int photoCount = new Random().nextInt(3);
+        int photoCount = new Random().nextInt(3)+1;
         for (int i = 0; i < photoCount; i++) {
             list.add(UUID.randomUUID().toString());
         }
@@ -63,7 +63,7 @@ public class TestRequest {
                 .limit(length)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
-        return randomContent;
+        return randomContent+"A";
     }
 
     private void setUuidMap() {
@@ -78,7 +78,7 @@ public class TestRequest {
         return uuidMap;
     }
 
-    public EventReviewPointRequest getRequest() {
+    public PointRequest getRequest() {
         return request;
     }
 

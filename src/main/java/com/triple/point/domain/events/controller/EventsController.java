@@ -1,8 +1,8 @@
 package com.triple.point.domain.events.controller;
 
 import com.triple.point.domain.common.dto.EventResponseEntity;
-import com.triple.point.domain.events.dto.EventReviewPointRequest;
-import com.triple.point.domain.events.dto.EventReviewPointResponse;
+import com.triple.point.domain.events.dto.PointRequest;
+import com.triple.point.domain.events.dto.PointResponse;
 import com.triple.point.domain.events.dto.TotalReviewPointResponse;
 import com.triple.point.domain.events.service.EventsReviewPointService;
 import com.triple.point.proxy.EventServiceProxy;
@@ -25,7 +25,7 @@ public class EventsController {
 
     @GetMapping("")
     public EventResponseEntity allHistory() {
-        List<EventReviewPointResponse> allPointHistories = eventsReviewPointService.getAllPointHistories();
+        List<PointResponse> allPointHistories = eventsReviewPointService.getAllPointHistories();
         return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
                 .message("ALL-HISTORY")
@@ -35,7 +35,7 @@ public class EventsController {
 
     @GetMapping("/{userId}")
     public EventResponseEntity getUserHistories(@PathVariable("userId") String userId) {
-        List<EventReviewPointResponse> userPointHistories = eventsReviewPointService.getUserPointHistories(userId);
+        List<PointResponse> userPointHistories = eventsReviewPointService.getUserPointHistories(userId);
         return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
                 .message("USER-HISTORY")
@@ -56,12 +56,9 @@ public class EventsController {
 
 
     @PostMapping("")
-    public EventResponseEntity points(@RequestBody EventReviewPointRequest request)
-            throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
-        log.info("[POST] :: /posts, request :: {}", request);
-        //PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
-        EventReviewPointResponse response = (EventReviewPointResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
-        log.info("[POST] :: /posts, response {}", response.toString());
+    public EventResponseEntity points(@RequestBody PointRequest request)
+            throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        PointResponse response = (PointResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
 
         return EventResponseEntity.successResponse()
                 .message(response.getAction().name())

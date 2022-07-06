@@ -5,13 +5,13 @@ import com.triple.point.domain.common.dto.EventResponse;
 import com.triple.point.domain.common.exception.CustomException;
 import com.triple.point.domain.common.type.ActionType;
 import com.triple.point.domain.common.type.ExceptionType;
-import com.triple.point.domain.events.dto.EventReviewPointRequest;
-import com.triple.point.domain.events.dto.EventReviewPointResponse;
-import com.triple.point.domain.events.dto.TotalReviewPointResponse;
-import com.triple.point.domain.events.entity.EventsReviewPoint;
-import com.triple.point.domain.events.entity.UserPoint;
-import com.triple.point.domain.events.repository.EventsReviewPointRepository;
-import com.triple.point.domain.events.repository.UserPointRepository;
+import com.triple.point.domain.events.dto.*;
+import com.triple.point.domain.events.entity.PointHistory;
+import com.triple.point.domain.events.entity.Review;
+import com.triple.point.domain.events.entity.User;
+import com.triple.point.domain.events.repository.PointHistoryRepository;
+import com.triple.point.domain.events.repository.ReviewRepository;
+import com.triple.point.domain.events.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,13 +28,14 @@ import java.util.stream.Collectors;
 @Service
 public class EventsReviewPointService implements EventsService {
 
-    private final EventsReviewPointRepository eventsReviewPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
-    private final UserPointRepository userPointRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
 
-    public List<EventReviewPointResponse> getAllPointHistories() {
-        return eventsReviewPointRepository.findAll().stream()
-                .map(EventReviewPointResponse::new)
+    public List<PointResponse> getAllPointHistories() {
+        return pointHistoryRepository.findAll().stream()
+                .map(PointResponse::new)
                 .collect(Collectors.toList());
     }
 
@@ -46,21 +46,20 @@ public class EventsReviewPointService implements EventsService {
      * @return int : 사용자 포인트 총합
      */
     public TotalReviewPointResponse userTotalPoint(String userId) {
-        List<EventsReviewPoint> userReviewPoints = eventsReviewPointRepository.findByUserId(userId);
-        int totalPoint = userReviewPoints.stream()
-                .mapToInt(EventsReviewPoint::getIncreasePoint)
-                .sum();
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_USER));
+
         return TotalReviewPointResponse.builder()
                 .userId(userId)
-                .totalPoint(totalPoint)
-                .reviewCount(userReviewPoints.size())
+                .totalPoint(user.getPoint())
+                .reviewCount(user.getReviews().size())
                 .build();
     }
 
     /** 사용자 포인트 내역 리스트 반환 */
-    public List<EventReviewPointResponse> getUserPointHistories(String userId) {
-        return eventsReviewPointRepository.findByUserId(userId).stream()
-                .map(EventReviewPointResponse::new)
+    public List<PointResponse> getUserPointHistories(String userId) {
+        return pointHistoryRepository.findByUserId(userId).stream()
+                .map(PointResponse::new)
                 .collect(Collectors.toList());
     }
 
@@ -71,80 +70,78 @@ public class EventsReviewPointService implements EventsService {
     @Override
     @Transactional
     public EventResponse addEvent(EventRequest eventRequest) {
-        EventReviewPointRequest request = (EventReviewPointRequest) eventRequest;
-        // 특정 장소의 첫 리뷰 판단
-        boolean checkFirstReview = eventsReviewPointRepository.findByPlaceId(request.getPlaceId()).isEmpty();
+        PointRequest request = (PointRequest) eventRequest;
+        // 특정 장소 리뷰 확인 (true : firstReview, false : normalReview)
+        boolean isReviewInPlace = reviewRepository.findByPlaceId(request.getPlaceId()).isEmpty();
 
-        // 장소에 해당 유저의 리뷰 내역이 있는지 조회
-        // ADD 만 검색 (MOD 와 DELETE 내역들은 ADD 내역이 없으면 성립 불가)
-        EventsReviewPoint eventsReviewPoint = eventsReviewPointRepository
-                .findByUserIdAndPlaceIdAndAction(
-                        request.getUserId(),
-                        request.getPlaceId(),
-                        request.getAction())
-                .orElseGet(request::toEntity);
+        Review review = reviewRepository
+                .findByPlaceIdAndUser(request.getPlaceId(), UUID.fromString(request.getUserId()))
+                .orElseGet(() -> isReviewInPlace ? request.toFirstReview() : request.toNormalReview());
 
-        UUID userId = UUID.fromString(request.getUserId());
-        UserPoint userPoint = userPointRepository.findById(userId)
-                .orElseGet(() -> new UserPoint(userId));
+        boolean isUserEmpty = Optional.ofNullable(review.getUser()).isEmpty();
 
-        // 요청 유저의 장소 리뷰가 없으면 신규 포인트 내역 생성 및 초기화
-        if(eventsReviewPoint.getId() == null || userPoint.checkPlaceReview(request.getPlaceId())) {
-            // 특정 장소 첫 리뷰 보너스 포인트
-            if(checkFirstReview) {
-                eventsReviewPoint.bonusPoint();
-                userPoint.addPoint();
-            }
-            // 지급되는 포인트 및 현 시점 포인트 계산
-            eventsReviewPoint.calculationPoint();
-            eventsReviewPointRepository.save(eventsReviewPoint);
+        PointHistory history = request.toHistory();
+        if (isUserEmpty) {
+            // 유저가 비어있다면 새로 만든 리뷰이다.
+            User user = request.toUser();
+            user.addReview(review);
+            user.addPoint(review.getPoint());
+            userRepository.save(user);
+
+            history.setIncreasePoint(review.getPoint());
+            history.setUserInto(user);
+            history.setReviewInfo(review);
+
+            pointHistoryRepository.save(history);
         } else {
-            throw new CustomException(ExceptionType.ALREADY_EXIST_RESOURCE, new EventReviewPointResponse(eventsReviewPoint));
+            throw new CustomException(ExceptionType.ALREADY_EXIST_RESOURCE, new ReviewResponse(review));
         }
 
-        return new EventReviewPointResponse(eventsReviewPoint);
+        return new PointResponse(history);
     }
 
     @Override
     @Transactional
     public EventResponse modifyEvent(EventRequest eventRequest) {
-        EventReviewPointRequest request = (EventReviewPointRequest) eventRequest;
+        PointRequest request = (PointRequest) eventRequest;
 
-        // 수정 대상 = 사용자가 쓴 리뷰
-        EventsReviewPoint recentHistory = eventsReviewPointRepository
-                .findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
-                .orElseThrow(() -> new RuntimeException("Not Found History"));
+        Review review = reviewRepository.findById(UUID.fromString(request.getReviewId()))
+                .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_REVIEW));
 
-        // 최근 이력이 삭제된 경우 수정할 수 없음 삭제는 ADD, MOD 이력만으로 판단.
-        isDeletedHistory(recentHistory);
-        
-        EventsReviewPoint modifyHistory = request.toEntity();
-        modifyHistory.modifyPoint(recentHistory.isFirstReview(), request, recentHistory.getCurrentPoint());
+        int increasePoint = review.modifyReview(request.getContent(), request.getAttachedPhotoIds().size());
 
-        eventsReviewPointRepository.save(modifyHistory);
-        return new EventReviewPointResponse(modifyHistory);
+        PointHistory history = request.toHistory();
+        history.setReviewInfo(review);
+        history.setUserInto(review.getUser());
+        history.setIncreasePoint(increasePoint);
+        pointHistoryRepository.save(history);
+
+        return new PointResponse(history);
     }
 
     @Override
     @Transactional
     public EventResponse deleteEvent(EventRequest eventRequest) {
-        EventReviewPointRequest request = (EventReviewPointRequest) eventRequest;
+        PointRequest request = (PointRequest) eventRequest;
 
-        // 최근 이력이 없음 == 삭제할 리뷰가 없음으로 판단 = 에러
-        EventsReviewPoint targetHistory = eventsReviewPointRepository.findTopByReviewIdOrderByCreatedAtDesc(request.getReviewId())
+        // 삭제할 리뷰가 없음 = 에러
+        Review review = reviewRepository.findById(UUID.fromString(request.getReviewId()))
                 .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_REVIEW));
-        
-        // 최근 이력이 삭제된 경우 삭제할 수 없음 삭제는 ADD, MOD 이력만으로 판단.
-        isDeletedHistory(targetHistory);
-        
-        EventsReviewPoint eventsReviewPoint = request.toEntity();
-        eventsReviewPoint.deletePoint(targetHistory.getCurrentPoint(), targetHistory.isFirstReview());
 
-        eventsReviewPointRepository.save(eventsReviewPoint);
-        return new EventReviewPointResponse(eventsReviewPoint);
+        int deletePoint = review.deleteReview();
+
+        PointHistory history = request.toHistory();
+        history.setReviewInfo(review);
+        history.setUserInto(review.getUser());
+        history.setIncreasePoint(deletePoint);
+
+        reviewRepository.delete(review);
+
+        pointHistoryRepository.save(history);
+        return new PointResponse(history);
     }
 
-    private void isDeletedHistory(EventsReviewPoint targetHistory) {
+    private void isDeletedHistory(PointHistory targetHistory) {
         if (targetHistory.getAction() == ActionType.DELETE) {
             throw new CustomException(ExceptionType.BAD_REQUEST_ACTION);
         }

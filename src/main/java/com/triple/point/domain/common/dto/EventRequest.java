@@ -6,5 +6,4 @@ import com.triple.point.domain.common.type.EventType;
 public interface EventRequest {
     EventType getType();
     ActionType getAction();
-    <E> E toEntity();
 }
