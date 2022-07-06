@@ -1,6 +1,5 @@
 package com.triple.point.domain.common.exception;
 
-import com.triple.point.domain.common.dto.EventResponseEntity;
 import com.triple.point.domain.common.dto.ExceptionResponseEntity;
 import com.triple.point.domain.common.type.ExceptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @RestControllerAdvice(basePackages = "com.triple.point.domain.points.controller")
-public class PointsExceptionAdviceController {
+public class EventsExceptionAdviceController {
 
     @ExceptionHandler(NullPointerException.class)
     public ExceptionResponseEntity<Object> nullPointer(NullPointerException e) {
