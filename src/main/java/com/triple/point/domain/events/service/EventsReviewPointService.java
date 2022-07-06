@@ -9,13 +9,18 @@ import com.triple.point.domain.events.dto.EventReviewPointRequest;
 import com.triple.point.domain.events.dto.EventReviewPointResponse;
 import com.triple.point.domain.events.dto.TotalReviewPointResponse;
 import com.triple.point.domain.events.entity.EventsReviewPoint;
+import com.triple.point.domain.events.entity.UserPoint;
 import com.triple.point.domain.events.repository.EventsReviewPointRepository;
+import com.triple.point.domain.events.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,6 +30,8 @@ import java.util.stream.Collectors;
 public class EventsReviewPointService implements EventsService {
 
     private final EventsReviewPointRepository eventsReviewPointRepository;
+
+    private final UserPointRepository userPointRepository;
 
     public List<EventReviewPointResponse> getAllPointHistories() {
         return eventsReviewPointRepository.findAll().stream()
@@ -77,18 +84,22 @@ public class EventsReviewPointService implements EventsService {
                         request.getAction())
                 .orElseGet(request::toEntity);
 
+        UUID userId = UUID.fromString(request.getUserId());
+        UserPoint userPoint = userPointRepository.findById(userId)
+                .orElseGet(() -> new UserPoint(userId));
+
         // 요청 유저의 장소 리뷰가 없으면 신규 포인트 내역 생성 및 초기화
-        if(eventsReviewPoint.getId() == null) {
+        if(eventsReviewPoint.getId() == null || userPoint.checkPlaceReview(request.getPlaceId())) {
             // 특정 장소 첫 리뷰 보너스 포인트
             if(checkFirstReview) {
                 eventsReviewPoint.bonusPoint();
+                userPoint.addPoint();
             }
             // 지급되는 포인트 및 현 시점 포인트 계산
             eventsReviewPoint.calculationPoint();
             eventsReviewPointRepository.save(eventsReviewPoint);
         } else {
             throw new CustomException(ExceptionType.ALREADY_EXIST_RESOURCE, new EventReviewPointResponse(eventsReviewPoint));
-
         }
 
         return new EventReviewPointResponse(eventsReviewPoint);
