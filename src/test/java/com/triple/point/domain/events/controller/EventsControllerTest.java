@@ -1,8 +1,8 @@
-package com.triple.point.domain.points.controller;
+package com.triple.point.domain.events.controller;
 
-import com.triple.point.domain.points.dto.PointHistoryRequest;
-import com.triple.point.domain.points.dto.PointHistoryResponse;
-import com.triple.point.domain.points.service.PointHistoryService;
+import com.triple.point.domain.events.dto.EventReviewPointRequest;
+import com.triple.point.domain.events.dto.EventReviewPointResponse;
+import com.triple.point.domain.events.service.EventsReviewPointService;
 import com.triple.point.proxy.EventServiceProxy;
 import com.triple.point.testDto.TestRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -21,13 +21,13 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PointsController.class)
-class PointsControllerTest {
+@WebMvcTest(EventsController.class)
+class EventsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    private PointHistoryService pointHistoryService;
+    private EventsReviewPointService eventsReviewPointService;
 
     @MockBean
     private EventServiceProxy eventServiceProxy;
@@ -37,18 +37,18 @@ class PointsControllerTest {
     public void get_all_test() throws Exception {
         // given
         final TestRequest testRequest = new TestRequest();
-        PointHistoryRequest request = testRequest.getRequest();
+        EventReviewPointRequest request = testRequest.getRequest();
         Map<String, String> uuidMap = testRequest.getUuidMap();
 
         final TestRequest testRequest2 = new TestRequest();
-        PointHistoryRequest request2 = testRequest2.getRequest();
+        EventReviewPointRequest request2 = testRequest2.getRequest();
         Map<String, String> uuidMap2 = testRequest2.getUuidMap();
 
         // when
-        when(pointHistoryService.getAllPointHistories())
+        when(eventsReviewPointService.getAllPointHistories())
                 .thenReturn(List.of(
-                        new PointHistoryResponse(request.toEntity()),
-                        new PointHistoryResponse(request2.toEntity())
+                        new EventReviewPointResponse(request.toEntity()),
+                        new EventReviewPointResponse(request2.toEntity())
                 ));
 
 

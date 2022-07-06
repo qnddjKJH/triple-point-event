@@ -1,9 +1,9 @@
-package com.triple.point.domain.points.entity;
+package com.triple.point.domain.events.entity;
 
 import com.triple.point.domain.common.BaseTimeEntity;
 import com.triple.point.domain.common.type.ActionType;
 import com.triple.point.domain.common.type.EventType;
-import com.triple.point.domain.points.dto.PointHistoryRequest;
+import com.triple.point.domain.events.dto.EventReviewPointRequest;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -22,7 +22,7 @@ import java.util.UUID;
         @Index(name = "_action", columnList = "action"),
 })
 @Entity
-public class PointHistory extends BaseTimeEntity {
+public class EventsReviewPoint extends BaseTimeEntity {
     @Id
     @Column(name = "history_id", columnDefinition = "CHAR(36)")
     @GeneratedValue(generator = "uuid2")
@@ -52,8 +52,8 @@ public class PointHistory extends BaseTimeEntity {
     @Column(columnDefinition = "CHAR(36)")
     private String reviewId;
 
-    public static PointHistory createPointHistory(PointHistoryRequest request) {
-        PointHistory history = PointHistory.builder()
+    public static EventsReviewPoint createPointHistory(EventReviewPointRequest request) {
+        EventsReviewPoint history = EventsReviewPoint.builder()
                 .userId(request.getUserId())
                 .type(request.getType())
                 .action(request.getAction())
@@ -85,7 +85,7 @@ public class PointHistory extends BaseTimeEntity {
     }
 
     // 리뷰 수정
-    public void modifyPoint(boolean firstReview, PointHistoryRequest request, Integer currentPoint) {
+    public void modifyPoint(boolean firstReview, EventReviewPointRequest request, Integer currentPoint) {
         if(firstReview) {
             bonusPoint();
         }
@@ -103,7 +103,7 @@ public class PointHistory extends BaseTimeEntity {
         this.currentPoint = currentPoint + increasePoint;
     }
 
-    private void initPoint(PointHistoryRequest request) {
+    private void initPoint(EventReviewPointRequest request) {
         if (request.isContentLengthBonus()) {
             addPoint();
         }

@@ -1,9 +1,9 @@
-package com.triple.point.domain.points.repository;
+package com.triple.point.domain.events.repository;
 
 import com.triple.point.config.AuditingConfig;
 import com.triple.point.domain.common.type.ActionType;
-import com.triple.point.domain.points.dto.PointHistoryRequest;
-import com.triple.point.domain.points.entity.PointHistory;
+import com.triple.point.domain.events.dto.EventReviewPointRequest;
+import com.triple.point.domain.events.entity.EventsReviewPoint;
 import com.triple.point.testDto.TestRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,22 +18,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(AuditingConfig.class)
 @DataJpaTest
-class PointHistoryRepositoryTest {
+class EventsEventsReviewPointRepositoryTest {
     @Autowired
-    private PointHistoryRepository pointHistoryRepository;
+    private EventsReviewPointRepository eventsReviewPointRepository;
 
     @DisplayName("생성 테스트")
     @Test
     public void create_test() throws Exception {
         // given
         TestRequest testRequest = new TestRequest();
-        PointHistory pointHistory = testRequest.getRequest().toEntity();
+        EventsReviewPoint eventsReviewPoint = testRequest.getRequest().toEntity();
 
         // when
-        pointHistoryRepository.save(pointHistory);
+        eventsReviewPointRepository.save(eventsReviewPoint);
 
         // then
-        assertThat(pointHistory.getId()).isNotNull();
+        assertThat(eventsReviewPoint.getId()).isNotNull();
     }
 
     @DisplayName("사용자 내역 조회 테스트")
@@ -43,13 +43,13 @@ class PointHistoryRepositoryTest {
         TestRequest testRequest1 = new TestRequest();
         TestRequest testRequest2 = new TestRequest();
 
-        PointHistory pointHistory1 = testRequest1.getRequest().toEntity();
-        PointHistory pointHistory2 = testRequest2.getRequest().toEntity();
-        pointHistoryRepository.save(pointHistory1);
-        pointHistoryRepository.save(pointHistory2);
+        EventsReviewPoint eventsReviewPoint1 = testRequest1.getRequest().toEntity();
+        EventsReviewPoint eventsReviewPoint2 = testRequest2.getRequest().toEntity();
+        eventsReviewPointRepository.save(eventsReviewPoint1);
+        eventsReviewPointRepository.save(eventsReviewPoint2);
 
         // when
-        List<PointHistory> userIds = pointHistoryRepository.findByUserId(testRequest1.getUuidMap().get(USER));
+        List<EventsReviewPoint> userIds = eventsReviewPointRepository.findByUserId(testRequest1.getUuidMap().get(USER));
 
         // then
         assertThat(userIds.size()).isEqualTo(1);
@@ -63,13 +63,13 @@ class PointHistoryRepositoryTest {
         TestRequest testRequest1 = new TestRequest();
         TestRequest testRequest2 = new TestRequest();
 
-        PointHistory pointHistory1 = testRequest1.getRequest().toEntity();
-        PointHistory pointHistory2 = testRequest2.getRequest().toEntity();
-        pointHistoryRepository.save(pointHistory1);
-        pointHistoryRepository.save(pointHistory2);
+        EventsReviewPoint eventsReviewPoint1 = testRequest1.getRequest().toEntity();
+        EventsReviewPoint eventsReviewPoint2 = testRequest2.getRequest().toEntity();
+        eventsReviewPointRepository.save(eventsReviewPoint1);
+        eventsReviewPointRepository.save(eventsReviewPoint2);
 
         // when
-        List<PointHistory> places = pointHistoryRepository.findByPlaceId(testRequest1.getUuidMap().get(PLACE));
+        List<EventsReviewPoint> places = eventsReviewPointRepository.findByPlaceId(testRequest1.getUuidMap().get(PLACE));
 
         // then
         assertThat(places.size()).isEqualTo(1);
@@ -83,13 +83,13 @@ class PointHistoryRepositoryTest {
         TestRequest testRequest1 = new TestRequest();
         TestRequest testRequest2 = new TestRequest();
 
-        PointHistory pointHistory1 = testRequest1.getRequest().toEntity();
-        PointHistory pointHistory2 = testRequest2.getRequest().toEntity();
-        pointHistoryRepository.save(pointHistory1);
-        pointHistoryRepository.save(pointHistory2);
+        EventsReviewPoint eventsReviewPoint1 = testRequest1.getRequest().toEntity();
+        EventsReviewPoint eventsReviewPoint2 = testRequest2.getRequest().toEntity();
+        eventsReviewPointRepository.save(eventsReviewPoint1);
+        eventsReviewPointRepository.save(eventsReviewPoint2);
 
         // when
-        List<PointHistory> reviews = pointHistoryRepository.findByReviewId(testRequest1.getUuidMap().get(REVIEW));
+        List<EventsReviewPoint> reviews = eventsReviewPointRepository.findByReviewId(testRequest1.getUuidMap().get(REVIEW));
 
         // then
         assertThat(reviews.size()).isEqualTo(1);
@@ -101,26 +101,26 @@ class PointHistoryRepositoryTest {
     public void findByUserIdAndPlaceIdAndActionTest() throws Exception {
         // given
         TestRequest testRequest1 = new TestRequest();
-        PointHistoryRequest request1 = testRequest1.getRequest();
+        EventReviewPointRequest request1 = testRequest1.getRequest();
 
         TestRequest testRequest2 = new TestRequest();
-        PointHistoryRequest request2 = testRequest2.getRequest();
+        EventReviewPointRequest request2 = testRequest2.getRequest();
 
 
-        pointHistoryRepository.save(request1.toEntity());
-        pointHistoryRepository.save(request2.toEntity());
+        eventsReviewPointRepository.save(request1.toEntity());
+        eventsReviewPointRepository.save(request2.toEntity());
 
         // when
-        PointHistory pointHistory = pointHistoryRepository
+        EventsReviewPoint eventsReviewPoint = eventsReviewPointRepository
                 .findByUserIdAndPlaceIdAndAction(request1.getUserId(), request1.getPlaceId(), request1.getAction())
                 .orElse(null);
 
 
         // then
-        assertThat(pointHistory).isNotNull();
-        assertThat(pointHistory.getUserId()).isEqualTo(request1.getUserId());
-        assertThat(pointHistory.getAction()).isEqualTo(request1.getAction());
-        assertThat(pointHistory.getUserId()).isNotEqualTo(request2.getUserId());
+        assertThat(eventsReviewPoint).isNotNull();
+        assertThat(eventsReviewPoint.getUserId()).isEqualTo(request1.getUserId());
+        assertThat(eventsReviewPoint.getAction()).isEqualTo(request1.getAction());
+        assertThat(eventsReviewPoint.getUserId()).isNotEqualTo(request2.getUserId());
     }
     
     @DisplayName("리뷰 최근 내역 1건 조회")
@@ -128,9 +128,9 @@ class PointHistoryRepositoryTest {
     public void findTopReviewIdOrderByCreatedAtDescTest() throws Exception {
         // given
         TestRequest testRequest1 = new TestRequest();
-        PointHistoryRequest request1 = testRequest1.getRequest();
+        EventReviewPointRequest request1 = testRequest1.getRequest();
         TestRequest testRequest2 = new TestRequest();
-        PointHistoryRequest request2 = testRequest2.getRequest();
+        EventReviewPointRequest request2 = testRequest2.getRequest();
 
         request2.setAction(ActionType.MOD.name());
         request2.setContent("");
@@ -139,21 +139,21 @@ class PointHistoryRepositoryTest {
         request2.setReviewId(request1.getReviewId());
 
 
-        PointHistory save1 = pointHistoryRepository.save(request1.toEntity());
+        EventsReviewPoint save1 = eventsReviewPointRepository.save(request1.toEntity());
         Thread.sleep(1000);
-        PointHistory save2 = pointHistoryRepository.save(request2.toEntity());
+        EventsReviewPoint save2 = eventsReviewPointRepository.save(request2.toEntity());
 
         // when
-        PointHistory pointHistory = pointHistoryRepository
+        EventsReviewPoint eventsReviewPoint = eventsReviewPointRepository
                 .findTopByReviewIdOrderByCreatedAtDesc(request1.getReviewId())
                 .orElse(null);
 
         // then
-        assertThat(pointHistory).isNotNull();
-        assertThat(pointHistory.getId()).isEqualTo(save2.getId());
-        assertThat(pointHistory.getId()).isNotEqualTo(save1.getId());
-        assertThat(pointHistory.getUserId()).isEqualTo(request2.getUserId());
-        assertThat(pointHistory.getAction()).isEqualTo(request2.getAction());
+        assertThat(eventsReviewPoint).isNotNull();
+        assertThat(eventsReviewPoint.getId()).isEqualTo(save2.getId());
+        assertThat(eventsReviewPoint.getId()).isNotEqualTo(save1.getId());
+        assertThat(eventsReviewPoint.getUserId()).isEqualTo(request2.getUserId());
+        assertThat(eventsReviewPoint.getAction()).isEqualTo(request2.getAction());
     }
 
 }

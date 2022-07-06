@@ -1,10 +1,10 @@
-package com.triple.point.domain.points.controller;
+package com.triple.point.domain.events.controller;
 
 import com.triple.point.domain.common.dto.EventResponseEntity;
-import com.triple.point.domain.points.dto.PointHistoryRequest;
-import com.triple.point.domain.points.dto.PointHistoryResponse;
-import com.triple.point.domain.points.dto.TotalPointResponse;
-import com.triple.point.domain.points.service.PointHistoryService;
+import com.triple.point.domain.events.dto.EventReviewPointRequest;
+import com.triple.point.domain.events.dto.EventReviewPointResponse;
+import com.triple.point.domain.events.dto.TotalReviewPointResponse;
+import com.triple.point.domain.events.service.EventsReviewPointService;
 import com.triple.point.proxy.EventServiceProxy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,17 +15,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @Slf4j
-@RequestMapping("/points")
+@RequestMapping("/events")
 @RequiredArgsConstructor
 @RestController
-public class PointsController {
+public class EventsController {
 
     private final EventServiceProxy eventServiceProxy;
-    private final PointHistoryService pointHistoryService;
+    private final EventsReviewPointService eventsReviewPointService;
 
     @GetMapping("")
     public EventResponseEntity allHistory() {
-        List<PointHistoryResponse> allPointHistories = pointHistoryService.getAllPointHistories();
+        List<EventReviewPointResponse> allPointHistories = eventsReviewPointService.getAllPointHistories();
         return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
                 .message("ALL-HISTORY")
@@ -35,7 +35,7 @@ public class PointsController {
 
     @GetMapping("/{userId}")
     public EventResponseEntity getUserHistories(@PathVariable("userId") String userId) {
-        List<PointHistoryResponse> userPointHistories = pointHistoryService.getUserPointHistories(userId);
+        List<EventReviewPointResponse> userPointHistories = eventsReviewPointService.getUserPointHistories(userId);
         return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
                 .message("USER-HISTORY")
@@ -43,17 +43,10 @@ public class PointsController {
                 .build();
     }
 
-    /**
-     * 사용자 포인트 총점 조회 API
-     *
-     * */
     @GetMapping("/{userId}/total")
     public EventResponseEntity userTotalPoint(@PathVariable("userId") String userId) {
-        int userTotalPoint = pointHistoryService.userTotalPoint(userId);
-        TotalPointResponse response = TotalPointResponse.builder()
-                .userId(userId)
-                .totalPoint(userTotalPoint)
-                .build();
+        TotalReviewPointResponse response = eventsReviewPointService.userTotalPoint(userId);
+
         return EventResponseEntity.successResponse()
                 .status(HttpStatus.OK)
                 .message("TOTAL")
@@ -63,11 +56,11 @@ public class PointsController {
 
 
     @PostMapping("")
-    public EventResponseEntity points(@RequestBody PointHistoryRequest request)
+    public EventResponseEntity points(@RequestBody EventReviewPointRequest request)
             throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
         log.info("[POST] :: /posts, request :: {}", request);
         //PointHistoryResponse pointHistoryResponse = pointHistoryService.pointsServiceManager(request);
-        PointHistoryResponse response = (PointHistoryResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
+        EventReviewPointResponse response = (EventReviewPointResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
         log.info("[POST] :: /posts, response {}", response.toString());
 
         return EventResponseEntity.successResponse()
