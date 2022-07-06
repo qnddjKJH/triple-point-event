@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class EventServiceProxy  {
@@ -34,27 +35,15 @@ public class EventServiceProxy  {
     }
 
     public EventResponse invoke(EventType type, ActionType action, EventRequest request) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        isConfirmReq(type, action);
-        Class<? extends EventsService> eventServiceClass = serviceMap.get(type.name()).getClass();
-        Method method = eventServiceClass.getMethod(methodMap.get(action.name()), EventRequest.class);
+        EventsService eventsService = Optional.ofNullable(serviceMap.get(type.name()))
+                .orElseThrow(() -> new CustomException(ExceptionType.BAD_REQUEST_TYPE, type));
+
+        String methodName = Optional.ofNullable(methodMap.get(action.name()))
+                .orElseThrow(() -> new CustomException(ExceptionType.BAD_REQUEST_ACTION, action));
+
+        Class<? extends EventsService> eventServiceClass = eventsService.getClass();
+        Method method = eventServiceClass.getMethod(methodName, EventRequest.class);
 
         return (EventResponse) method.invoke(serviceMap.get(type.name()), request);
-    }
-
-    private void isConfirmReq(EventType type, ActionType action) {
-        isCorrectType(type);
-        isCorrectAction(action);
-    }
-
-    private void isCorrectType(EventType type) {
-        if (!serviceMap.containsKey(type.name())) {
-            throw new CustomException(ExceptionType.BAD_REQUEST_TYPE, type);
-        }
-    }
-
-    private void isCorrectAction(ActionType action) {
-        if (!serviceMap.containsKey(action.name())) {
-            throw new CustomException(ExceptionType.BAD_REQUEST_ACTION, action);
-        }
     }
 }
