@@ -42,15 +42,12 @@ public class PointHistory extends BaseCreatedTimeEntity {
     private Integer increasePoint = 0; // 지급 포인트 (증감된 포인트)
     @Builder.Default
     private Integer reviewPoint = 0; // 이력 시점 리뷰 점수
-
     @Enumerated(value = EnumType.STRING)
     private ReviewType reviewType;
-
     @Column(columnDefinition = "CHAR(36)")
     private String userId;
     @Column(columnDefinition = "CHAR(36)")
     private String reviewId;
-
     @Column(columnDefinition = "CHAR(36)")
     private String placeId;
 

@@ -4,7 +4,6 @@ import com.triple.point.domain.common.entity.BaseTimeEntity;
 import com.triple.point.domain.common.type.ReviewType;
 import com.triple.point.domain.events.dto.PointRequest;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -26,15 +25,12 @@ public class Review extends BaseTimeEntity {
     @Column(name = "review_id", columnDefinition = "CHAR(36)")
     @Type(type = "uuid-char")
     private UUID id;
-    private String content;
-    private int attachedPhotoIds;
-
-    @Enumerated(EnumType.STRING)
-    private ReviewType type;
-
     @Builder.Default
     private int point = 0;
-
+    @Enumerated(EnumType.STRING)
+    private ReviewType type;
+    private String content;
+    private int attachedPhotoCount;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -46,7 +42,7 @@ public class Review extends BaseTimeEntity {
         Review review = Review.builder()
                 .id(UUID.fromString(request.getReviewId()))
                 .content(request.getContent())
-                .attachedPhotoIds(request.getAttachedPhotoIds().size())
+                .attachedPhotoCount(request.getAttachedPhotoIds().size())
                 .type(ReviewType.NORMAL)
                 .placeId(request.getPlaceId())
                 .build();
@@ -58,7 +54,7 @@ public class Review extends BaseTimeEntity {
         Review review = Review.builder()
                 .id(UUID.fromString(request.getReviewId()))
                 .content(request.getContent())
-                .attachedPhotoIds(request.getAttachedPhotoIds().size())
+                .attachedPhotoCount(request.getAttachedPhotoIds().size())
                 .type(ReviewType.FIRST)
                 .placeId(request.getPlaceId())
                 .build();
@@ -77,7 +73,7 @@ public class Review extends BaseTimeEntity {
         this.point = 0; // 초기화
         // 내용, 사진수 수정
         this.content = content;
-        this.attachedPhotoIds = attachedPhotoIds;
+        this.attachedPhotoCount = attachedPhotoIds;
         initPoint(); // 포인트 계산
 
         // 증감 포인트 계산 : 수정 포인트 - 현재 포인트
@@ -88,15 +84,15 @@ public class Review extends BaseTimeEntity {
     }
 
     public int deleteReview() {
-        int deletePoint = point;
-        user.addPoint((point * -1));
-        point -= point;
+        int deletePoint = point * -1;
+        user.removeReview(this, deletePoint);
+        point += deletePoint;
         return deletePoint;
     }
 
     private void initPoint() {
         point += (content.length() > 0) ? 1 : 0;
-        point += (attachedPhotoIds > 0) ? 1 : 0;
+        point += (attachedPhotoCount > 0) ? 1 : 0;
         point += (type == ReviewType.FIRST) ? 1 : 0;
     }
 }

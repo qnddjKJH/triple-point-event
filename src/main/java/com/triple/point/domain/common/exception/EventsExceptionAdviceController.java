@@ -16,6 +16,7 @@ public class EventsExceptionAdviceController {
         return ExceptionResponseEntity.failResponse()
                 .message(ExceptionType.SERVER_ERROR.getMessage())
                 .status(ExceptionType.SERVER_ERROR.getCode())
+                .data(e.getStackTrace())
                 .build();
     }
 

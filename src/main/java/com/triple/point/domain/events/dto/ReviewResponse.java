@@ -14,14 +14,11 @@ public class ReviewResponse implements EventResponse {
     private int photoCount;
     private ReviewType type;
     private int point;
-    private UserResponse user;
-
     public ReviewResponse(Review review) {
         this.reviewId = review.getId();
         this.content = review.getContent();
-        this.photoCount = review.getAttachedPhotoIds();
+        this.photoCount = review.getAttachedPhotoCount();
         this.type = review.getType();
         this.point = review.getPoint();
-        this.user = new UserResponse(review.getUser());
     }
 }

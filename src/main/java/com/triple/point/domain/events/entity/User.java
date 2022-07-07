@@ -3,7 +3,6 @@ package com.triple.point.domain.events.entity;
 import com.triple.point.domain.common.entity.BaseTimeEntity;
 import com.triple.point.domain.events.dto.PointRequest;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -38,6 +37,11 @@ public class User extends BaseTimeEntity {
     public void addReview(Review review) {
         review.setUser(this);
         reviews.add(review);
+    }
+
+    public void removeReview(Review review, int deletePoint) {
+        reviews.remove(review);
+        addPoint(deletePoint);
     }
 
     public void addPoint(int point) {

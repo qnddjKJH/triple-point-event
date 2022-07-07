@@ -9,25 +9,25 @@ drop table if exists users;
 
 create table point_history (
    history_id CHAR(36) not null,
-   created_at datetime,
+   type varchar(10),
    action varchar(10),
    increase_point integer,
-   place_id CHAR(36),
-   review_id CHAR(36),
    review_point integer,
-   review_type varchar(10),
-   type varchar(10),
-   user_id CHAR(36),
    user_total integer,
+   review_type varchar(10),
+   user_id CHAR(36),
+   review_id CHAR(36),
+   place_id CHAR(36),
+   created_at datetime,
    primary key (history_id)
 ) engine=INNODB;
 
 create table review (
     review_id CHAR(36) not null,
-    attached_photo_ids integer not null,
-    content varchar(255),
-    type varchar(10),
     point integer not null,
+    type varchar(10),
+    content varchar(255),
+    attached_photo_count integer not null,
     user_id CHAR(36),
     place_id CHAR(36),
     created_at datetime,

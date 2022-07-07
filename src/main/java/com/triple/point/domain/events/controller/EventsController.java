@@ -23,6 +23,7 @@ public class EventsController {
     private final EventServiceProxy eventServiceProxy;
     private final EventsReviewPointService eventsReviewPointService;
 
+    /** 전체 이력 조회 */
     @GetMapping("")
     public EventResponseEntity allHistory() {
         List<PointResponse> allPointHistories = eventsReviewPointService.getAllPointHistories();
@@ -33,6 +34,7 @@ public class EventsController {
                 .build();
     }
 
+    /** 사용자 내역 조회 */
     @GetMapping("/{userId}")
     public EventResponseEntity getUserHistories(@PathVariable("userId") String userId) {
         List<PointResponse> userPointHistories = eventsReviewPointService.getUserPointHistories(userId);
@@ -43,6 +45,7 @@ public class EventsController {
                 .build();
     }
 
+    /** 사용자 총점 조회 */
     @GetMapping("/{userId}/total")
     public EventResponseEntity userTotalPoint(@PathVariable("userId") String userId) {
         TotalReviewPointResponse response = eventsReviewPointService.userTotalPoint(userId);
@@ -54,12 +57,12 @@ public class EventsController {
                 .build();
     }
 
-
+    /** 이벤트 도메인 API */
     @PostMapping("")
     public EventResponseEntity points(@RequestBody PointRequest request)
             throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         PointResponse response = (PointResponse) eventServiceProxy.invoke(request.getType(), request.getAction(), request);
-
+        log.info("response :: {}", response);
         return EventResponseEntity.successResponse()
                 .message(response.getAction().name())
                 .status(HttpStatus.OK)

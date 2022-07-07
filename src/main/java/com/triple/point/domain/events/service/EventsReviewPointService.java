@@ -14,6 +14,7 @@ import com.triple.point.domain.events.repository.ReviewRepository;
 import com.triple.point.domain.events.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,17 +35,11 @@ public class EventsReviewPointService implements EventsService {
     private final UserRepository userRepository;
 
     public List<PointResponse> getAllPointHistories() {
-        return pointHistoryRepository.findAll().stream()
+        return pointHistoryRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(PointResponse::new)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 사용자 포인트 총합 반환
-     *
-     * @param userId : 포인트 총합 대상 사용자 UUID
-     * @return int : 사용자 포인트 총합
-     */
     public TotalReviewPointResponse userTotalPoint(String userId) {
         User user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_USER));
@@ -75,7 +70,7 @@ public class EventsReviewPointService implements EventsService {
         boolean isReviewInPlace = reviewRepository.findByPlaceId(request.getPlaceId()).isEmpty();
 
         Review review = reviewRepository
-                .findByPlaceIdAndUser(request.getPlaceId(), UUID.fromString(request.getUserId()))
+                .findByPlaceIdAndUser(request.getPlaceId(), request.getUUID(PointRequest.USER))
                 .orElseGet(() -> isReviewInPlace ? request.toFirstReview() : request.toNormalReview());
 
         boolean isUserEmpty = Optional.ofNullable(review.getUser()).isEmpty();
@@ -83,9 +78,9 @@ public class EventsReviewPointService implements EventsService {
         PointHistory history = request.toHistory();
         if (isUserEmpty) {
             // 유저가 비어있다면 새로 만든 리뷰이다.
-            User user = request.toUser();
+            User user = userRepository.findById(request.getUUID(PointRequest.USER))
+                    .orElseGet(request::toUser);
             user.addReview(review);
-            user.addPoint(review.getPoint());
             userRepository.save(user);
 
             history.setIncreasePoint(review.getPoint());
@@ -105,7 +100,7 @@ public class EventsReviewPointService implements EventsService {
     public EventResponse modifyEvent(EventRequest eventRequest) {
         PointRequest request = (PointRequest) eventRequest;
 
-        Review review = reviewRepository.findById(UUID.fromString(request.getReviewId()))
+        Review review = reviewRepository.findById(request.getUUID(PointRequest.REVIEW))
                 .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_REVIEW));
 
         int increasePoint = review.modifyReview(request.getContent(), request.getAttachedPhotoIds().size());
@@ -125,7 +120,7 @@ public class EventsReviewPointService implements EventsService {
         PointRequest request = (PointRequest) eventRequest;
 
         // 삭제할 리뷰가 없음 = 에러
-        Review review = reviewRepository.findById(UUID.fromString(request.getReviewId()))
+        Review review = reviewRepository.findById(request.getUUID(PointRequest.REVIEW))
                 .orElseThrow(() -> new CustomException(ExceptionType.NOT_FOUND_REVIEW));
 
         int deletePoint = review.deleteReview();
@@ -139,11 +134,5 @@ public class EventsReviewPointService implements EventsService {
 
         pointHistoryRepository.save(history);
         return new PointResponse(history);
-    }
-
-    private void isDeletedHistory(PointHistory targetHistory) {
-        if (targetHistory.getAction() == ActionType.DELETE) {
-            throw new CustomException(ExceptionType.BAD_REQUEST_ACTION);
-        }
     }
 }

@@ -20,30 +20,30 @@ import java.util.Optional;
 
 @Service
 public class EventServiceProxy  {
-    private Map<String, EventsService> serviceMap = new HashMap<>();
-    private final Map<String, String> methodMap = Map.of(
-            "ADD", "addEvent",
-            "MOD", "modifyEvent",
-            "DELETE", "deleteEvent"
+    private Map<EventType, EventsService> serviceMap = new HashMap<>();
+    private final Map<ActionType, String> methodMap = Map.of(
+            ActionType.ADD, "addEvent",
+            ActionType.MOD, "modifyEvent",
+            ActionType.DELETE, "deleteEvent"
     );
 
     public EventServiceProxy(
             @Autowired EventsReviewPointService eventsReviewPointService,
             @Autowired ExampleUserEventsService exampleUserEventService) {
-        serviceMap.put("REVIEW", eventsReviewPointService);
-        serviceMap.put("USER", exampleUserEventService);
+        serviceMap.put(EventType.REVIEW, eventsReviewPointService);
+        serviceMap.put(EventType.USER, exampleUserEventService);
     }
 
     public EventResponse invoke(EventType type, ActionType action, EventRequest request) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        EventsService eventsService = Optional.ofNullable(serviceMap.get(type.name()))
+        EventsService eventsService = Optional.ofNullable(serviceMap.get(type))
                 .orElseThrow(() -> new CustomException(ExceptionType.BAD_REQUEST_TYPE, type));
 
-        String methodName = Optional.ofNullable(methodMap.get(action.name()))
+        String methodName = Optional.ofNullable(methodMap.get(action))
                 .orElseThrow(() -> new CustomException(ExceptionType.BAD_REQUEST_ACTION, action));
 
         Class<? extends EventsService> eventServiceClass = eventsService.getClass();
         Method method = eventServiceClass.getMethod(methodName, EventRequest.class);
 
-        return (EventResponse) method.invoke(serviceMap.get(type.name()), request);
+        return (EventResponse) method.invoke(serviceMap.get(type), request);
     }
 }

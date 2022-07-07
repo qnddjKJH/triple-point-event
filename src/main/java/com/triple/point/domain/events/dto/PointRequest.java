@@ -11,11 +11,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PointRequest implements EventRequest {
+    public static final String USER = "USER";
+    public static final String REVIEW = "REVIEW";
+    public static final String PLACE = "PLACE";
+
     private String type;
     private String action;
     private String reviewId;
@@ -48,5 +53,18 @@ public class PointRequest implements EventRequest {
     @Override
     public ActionType getAction() {
         return ActionType.valueOf(action);
+    }
+
+    public UUID getUUID(String type) {
+        switch (type) {
+            case USER:
+                return UUID.fromString(userId);
+            case REVIEW:
+                return UUID.fromString(reviewId);
+            case PLACE:
+                return UUID.fromString(placeId);
+            default:
+                return null;
+        }
     }
 }

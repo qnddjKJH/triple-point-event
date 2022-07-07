@@ -50,6 +50,6 @@ class EventsPointHistoryRepositoryTest {
         List<PointHistory> userIds = pointHistoryRepository.findByUserId(pointHistory1.getUserId());
 
         // then
-        assertThat(userIds.size()).isEqualTo(1);
+        assertThat(userIds.size()).isEqualTo(2);
     }
 }
